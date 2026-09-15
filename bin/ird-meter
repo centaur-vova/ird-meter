@@ -1,0 +1,149 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+require __DIR__ . '/../vendor/autoload.php';
+
+use CentaurVova\IrdMeter\IrdCalculator;
+
+$args = $argv;
+array_shift($args);
+
+$dir = '.';
+$raw = false;
+$json = false;
+$threshold = null;
+$ignoreComments = false;
+$includeElseif = false;
+$includeTernary = false;
+$includeMatch = false;
+$exclude = ['vendor', '.git', 'node_modules', 'var/cache'];
+
+foreach ($args as $arg) {
+    if ($arg === '--help' || $arg === '-h') {
+        echo <<<HELP
+IRD — If/Row Density calculator
+
+Usage:
+  ird-meter [directory] [options]
+
+Arguments:
+  directory          Directory to scan (default: current directory)
+
+Options:
+  --raw              Output only the IRD number
+  --json             Output JSON
+  --threshold=N      Exit 1 if IRD > N (for CI)
+  --exclude=A,B      Comma-separated directories to exclude
+                     (default: vendor,.git,node_modules,var/cache)
+  --ignore-comments  Count only non-comment, non-empty lines
+  --include-elseif   Count elseif branches too
+  --include-ternary  Count ternary operators
+  --include-match    Count match expressions
+  --all              Enable all optional counters
+  --help, -h         Show this help
+
+Examples:
+  ird-meter app
+  ird-meter app --raw
+  ird-meter app --threshold=5
+  ird-meter src --all --json
+  ird-meter app --exclude=vendor,tests
+
+HELP;
+        exit(0);
+    }
+
+    if ($arg === '--raw') {
+        $raw = true;
+    } elseif ($arg === '--json') {
+        $json = true;
+    } elseif ($arg === '--ignore-comments') {
+        $ignoreComments = true;
+    } elseif ($arg === '--include-elseif') {
+        $includeElseif = true;
+    } elseif ($arg === '--include-ternary') {
+        $includeTernary = true;
+    } elseif ($arg === '--include-match') {
+        $includeMatch = true;
+    } elseif ($arg === '--all') {
+        $includeElseif = true;
+        $includeTernary = true;
+        $includeMatch = true;
+    } elseif (str_starts_with($arg, '--threshold=')) {
+        $threshold = (float) substr($arg, strlen('--threshold='));
+    } elseif (str_starts_with($arg, '--exclude=')) {
+        $exclude = array_filter(explode(',', substr($arg, strlen('--exclude='))));
+    } elseif (!str_starts_with($arg, '--')) {
+        $dir = $arg;
+    }
+}
+
+$realDir = realpath($dir);
+if ($realDir === false || !is_dir($realDir)) {
+    fwrite(STDERR, "❌ Directory not found: {$dir}\n");
+    fwrite(STDERR, "Run 'ird-meter --help' for usage.\n");
+    exit(1);
+}
+
+$calculator = new IrdCalculator(
+    includeElseif: $includeElseif,
+    includeTernary: $includeTernary,
+    includeMatch: $includeMatch,
+    ignoreComments: $ignoreComments,
+    exclude: $exclude,
+);
+
+// Spinner (only for human-readable output)
+$spinner = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+$spinnerIndex = 0;
+$useSpinner = !$raw && !$json && stream_isatty(STDOUT);
+
+if ($useSpinner) {
+    fwrite(STDOUT, "\033[36m" . $spinner[0] . " Scanning...\033[0m");
+}
+
+$result = $calculator->calculate($realDir, function () use (&$spinnerIndex, $spinner, $useSpinner) {
+    if ($useSpinner) {
+        fwrite(STDOUT, "\r\033[36m" . $spinner[$spinnerIndex++ % count($spinner)] . " Scanning...\033[0m");
+    }
+});
+
+if ($useSpinner) {
+    fwrite(STDOUT, "\r\033[32m✅ Done.     \033[0m\n");
+}
+
+if ($raw) {
+    echo $result->density . "\n";
+    exit(0);
+}
+
+if ($json) {
+    echo json_encode($result->toArray(), JSON_PRETTY_PRINT) . "\n";
+    exit(0);
+}
+
+echo "📊 PHP IRD (If/Row Density)\n";
+echo "  If count:    {$result->ifCount}\n";
+echo "  Total lines: {$result->totalLines}\n";
+echo "  Files:       {$result->files}\n";
+echo sprintf("  IRD:         %.2f%%\n", $result->density);
+echo "\n";
+
+if ($result->isClean()) {
+    echo "  🟢 clean — this code is linear like a horse's path\n";
+} elseif ($result->isGood()) {
+    echo "  🟡 good — some branches, but manageable\n";
+} elseif ($result->needsAttention()) {
+    echo "  🟠 needs attention — too many ifs\n";
+} else {
+    echo "  🔴 for ponies — this code is a maze\n";
+}
+
+if ($threshold !== null && $result->density > $threshold) {
+    echo "\n❌ IRD {$result->density}% exceeds threshold {$threshold}%\n";
+    exit(1);
+}
+
+exit(0);
