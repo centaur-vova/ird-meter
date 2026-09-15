@@ -18,12 +18,23 @@ foreach ($autoloadPaths as $path) {
 }
 
 if (!$autoloadFound) {
-    fwrite(STDERR, "❌ Could not find Composer autoload.php\n");
+    fwrite(STDERR, "Could not find Composer autoload.php\n");
     fwrite(STDERR, "Run 'composer install' first.\n");
     exit(1);
 }
 
 use CentaurVova\IrdMeter\IrdCalculator;
+
+// ANSI colors (only for TTY)
+$isTty = stream_isatty(STDOUT);
+$isErrTty = stream_isatty(STDERR);
+$green = $isTty ? "\033[32m" : '';
+$yellow = $isTty ? "\033[33m" : '';
+$red = $isTty ? "\033[31m" : '';
+$cyan = $isTty ? "\033[36m" : '';
+$reset = $isTty ? "\033[0m" : '';
+$errRed = $isErrTty ? "\033[31m" : '';
+$errReset = $isErrTty ? "\033[0m" : '';
 
 $args = $argv;
 array_shift($args);
@@ -100,7 +111,7 @@ HELP;
 
 $realDir = realpath($dir);
 if ($realDir === false || !is_dir($realDir)) {
-    fwrite(STDERR, "❌ Directory not found: {$dir}\n");
+    fwrite(STDERR, "{$errRed}Directory not found: {$dir}{$errReset}\n");
     fwrite(STDERR, "Run 'ird-meter --help' for usage.\n");
     exit(1);
 }
@@ -116,20 +127,20 @@ $calculator = new IrdCalculator(
 // Spinner (only for human-readable output)
 $spinner = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 $spinnerIndex = 0;
-$useSpinner = !$raw && !$json && stream_isatty(STDOUT);
+$useSpinner = !$raw && !$json && $isTty;
 
 if ($useSpinner) {
-    fwrite(STDOUT, "\033[36m" . $spinner[0] . " Scanning...\033[0m");
+    fwrite(STDOUT, "{$cyan}" . $spinner[0] . " Scanning...{$reset}");
 }
 
-$result = $calculator->calculate($realDir, function () use (&$spinnerIndex, $spinner, $useSpinner) {
+$result = $calculator->calculate($realDir, function () use (&$spinnerIndex, $spinner, $useSpinner, $cyan, $reset) {
     if ($useSpinner) {
-        fwrite(STDOUT, "\r\033[36m" . $spinner[$spinnerIndex++ % count($spinner)] . " Scanning...\033[0m");
+        fwrite(STDOUT, "\r{$cyan}" . $spinner[$spinnerIndex++ % count($spinner)] . " Scanning...{$reset}");
     }
 });
 
 if ($useSpinner) {
-    fwrite(STDOUT, "\r\033[32m✅ Done.     \033[0m\n");
+    fwrite(STDOUT, "\r{$green}Done.     {$reset}\n");
 }
 
 if ($raw) {
@@ -142,7 +153,7 @@ if ($json) {
     exit(0);
 }
 
-echo "📊 PHP IRD (If/Row Density)\n";
+echo "PHP IRD (If/Row Density)\n";
 echo "  If count:    {$result->ifCount}\n";
 echo "  Total lines: {$result->totalLines}\n";
 echo "  Files:       {$result->files}\n";
@@ -150,17 +161,17 @@ echo sprintf("  IRD:         %.2f%%\n", $result->density);
 echo "\n";
 
 if ($result->isClean()) {
-    echo "  🟢 clean — this code is linear like a horse's path\n";
+    echo "  {$green}clean{$reset} — this code is linear like a horse's path\n";
 } elseif ($result->isGood()) {
-    echo "  🟡 good — some branches, but manageable\n";
+    echo "  {$yellow}good{$reset} — some branches, but manageable\n";
 } elseif ($result->needsAttention()) {
-    echo "  🟠 needs attention — too many ifs\n";
+    echo "  {$yellow}needs attention{$reset} — too many ifs\n";
 } else {
-    echo "  🔴 for ponies — this code is a maze\n";
+    echo "  {$red}for ponies{$reset} — this code is a maze\n";
 }
 
 if ($threshold !== null && $result->density > $threshold) {
-    echo "\n❌ IRD {$result->density}% exceeds threshold {$threshold}%\n";
+    echo "\n{$red}IRD {$result->density}% exceeds threshold {$threshold}%{$reset}\n";
     exit(1);
 }
 
