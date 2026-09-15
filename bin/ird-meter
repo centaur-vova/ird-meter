@@ -3,7 +3,25 @@
 
 declare(strict_types=1);
 
-require __DIR__ . '/../vendor/autoload.php';
+$autoloadPaths = [
+    __DIR__ . '/../vendor/autoload.php',
+    __DIR__ . '/../../../autoload.php',
+];
+
+$autoloadFound = false;
+foreach ($autoloadPaths as $path) {
+    if (file_exists($path)) {
+        require $path;
+        $autoloadFound = true;
+        break;
+    }
+}
+
+if (!$autoloadFound) {
+    fwrite(STDERR, "❌ Could not find Composer autoload.php\n");
+    fwrite(STDERR, "Run 'composer install' first.\n");
+    exit(1);
+}
 
 use CentaurVova\IrdMeter\IrdCalculator;
 
