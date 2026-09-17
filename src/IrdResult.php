@@ -7,7 +7,7 @@ namespace CentaurVova\IrdMeter;
 final class IrdResult
 {
     public function __construct(
-        public readonly int $ifCount,
+        public readonly int $ifWeight,
         public readonly int $totalLines,
         public readonly int $files,
         public readonly float $density,
@@ -35,12 +35,12 @@ final class IrdResult
     }
 
     /**
-     * @return array{ifCount: int, totalLines: int, files: int, density: float}
+     * @return array{ifWeight: int, totalLines: int, files: int, density: float}
      */
     public function toArray(): array
     {
         return [
-            'ifCount' => $this->ifCount,
+            'ifWeight' => $this->ifWeight,
             'totalLines' => $this->totalLines,
             'files' => $this->files,
             'density' => $this->density,

@@ -6,6 +6,7 @@
 [![Packagist](https://img.shields.io/packagist/v/centaur-vova/ird-meter)](https://packagist.org/packages/centaur-vova/ird-meter)
 [![Downloads](https://img.shields.io/packagist/dt/centaur-vova/ird-meter)](https://packagist.org/packages/centaur-vova/ird-meter)
 [![PHP](https://img.shields.io/badge/php-8.1%2B-blue)](https://www.php.net/)
+[![IRD](https://img.shields.io/badge/IRD-3.50%25-yellow?style=flat)](#what-is-ird)
 
 ## What is IRD?
 
@@ -35,25 +36,25 @@ vendor/bin/ird-meter app
 ## Example
 
 ```text
-📊 PHP IRD (If/Row Density)
+PHP IRD (If/Row Density)
   If count: 111
   Total lines: 5807
   Files: 96
   IRD: 1.91%
 
-  🟢 clean — this code is linear like a horse's path
+  clean — this code is linear like a horse's path
 ```
 
 With `--ignore-comments`:
 
 ```text
-📊 PHP IRD (If/Row Density)
+PHP IRD (If/Row Density)
   If count: 111
   Total lines: 3826
   Files: 96
   IRD: 2.90%
 
-  🟡 good — some branches, but manageable
+  good — some branches, but manageable
 ```
 
 The difference: 1981 lines (34%) are comments and PHPDoc.
@@ -61,17 +62,16 @@ The difference: 1981 lines (34%) are comments and PHPDoc.
 ## Self-check (Dogfooding)
 
 ```text
-$ ird-meter src
-📊 PHP IRD (If/Row Density)
-  If count: 12
-  Total lines: 216
-  Files: 2
-  IRD: 5.56%
+PHP IRD (If/Row Density)
+  If count: 9
+  Total lines: 257
+  Files: 3
+  IRD: 3.50%
 
-  🟠 needs attention — too many ifs
+  good — some branches, but manageable
 ```
 
-Yes, our own parser has many `if`s. It's a parser — it does nothing but check conditions. Irony appreciated.
+Yes, our own parser has a few `if`s. It's a parser — it does nothing but check conditions. Irony appreciated.
 
 See [TODO.md](TODO.md) — we're working on reducing it. PRs welcome.
 

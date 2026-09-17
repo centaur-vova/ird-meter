@@ -154,7 +154,7 @@ if ($json) {
 }
 
 echo "PHP IRD (If/Row Density)\n";
-echo "  If count:    {$result->ifCount}\n";
+echo "  If count:    {$result->ifWeight}\n";
 echo "  Total lines: {$result->totalLines}\n";
 echo "  Files:       {$result->files}\n";
 echo sprintf("  IRD:         %.2f%%\n", $result->density);

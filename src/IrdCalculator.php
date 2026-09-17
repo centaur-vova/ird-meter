@@ -6,7 +6,6 @@ namespace CentaurVova\IrdMeter;
 
 use PhpParser\Node;
 use PhpParser\NodeTraverser;
-use PhpParser\NodeVisitorAbstract;
 use PhpParser\ParserFactory;
 
 final class IrdCalculator
@@ -39,7 +38,7 @@ final class IrdCalculator
 
         $iterator = new \RecursiveIteratorIterator($filter);
 
-        $ifCount = 0;
+        $ifWeight = 0;
         $totalLines = 0;
         $files = 0;
 
@@ -69,52 +68,21 @@ final class IrdCalculator
                     continue;
                 }
 
-                $visitor = new class (
-                    $this->includeElseif,
-                    $this->includeTernary,
-                    $this->includeMatch,
-                ) extends NodeVisitorAbstract {
-                    public int $count = 0;
-
-                    public function __construct(
-                        private readonly bool $includeElseif,
-                        private readonly bool $includeTernary,
-                        private readonly bool $includeMatch,
-                    ) {
-                    }
-
-                    public function enterNode(Node $node): ?Node
-                    {
-                        if ($node instanceof Node\Stmt\If_) {
-                            $this->count++;
-                        }
-                        if ($this->includeElseif && $node instanceof Node\Stmt\ElseIf_) {
-                            $this->count++;
-                        }
-                        if ($this->includeTernary && $node instanceof Node\Expr\Ternary) {
-                            $this->count++;
-                        }
-                        if ($this->includeMatch && $node instanceof Node\Expr\Match_) {
-                            $this->count++;
-                        }
-                        return null;
-                    }
-                };
-
-                $traverser->addVisitor($visitor);
-                $traverser->traverse($ast);
-                $traverser->removeVisitor($visitor);
-
-                $ifCount += $visitor->count;
+                $ifWeight += BranchCounterBuilder::create()
+                    ->addCondition(Node\Stmt\If_::class, 1)
+                    ->addCondition(Node\Stmt\ElseIf_::class, (int) $this->includeElseif)
+                    ->addCondition(Node\Expr\Ternary::class, (int) $this->includeTernary)
+                    ->addCondition(Node\Expr\Match_::class, (int) $this->includeMatch)
+                    ->weight($ast);
             } catch (\Throwable) {
                 // Skip files with syntax errors
             }
         }
 
-        $density = $totalLines > 0 ? ($ifCount * 100 / $totalLines) : 0.0;
+        $density = $totalLines > 0 ? ($ifWeight * 100 / $totalLines) : 0.0;
 
         return new IrdResult(
-            ifCount: $ifCount,
+            ifWeight: $ifWeight,
             totalLines: $totalLines,
             files: $files,
             density: round($density, 2),

@@ -27,7 +27,7 @@ final class IrdCalculatorTest extends TestCase
         $calculator = new IrdCalculator();
         $result = $calculator->calculate($this->tmpDir);
 
-        self::assertSame(0, $result->ifCount);
+        self::assertSame(0, $result->ifWeight);
         self::assertSame(0, $result->totalLines);
         self::assertSame(0, $result->files);
         self::assertSame(0.0, $result->density);
@@ -48,7 +48,7 @@ PHP);
         $calculator = new IrdCalculator();
         $result = $calculator->calculate($this->tmpDir);
 
-        self::assertSame(2, $result->ifCount);
+        self::assertSame(2, $result->ifWeight);
         self::assertSame(1, $result->files);
     }
 
@@ -67,7 +67,7 @@ PHP);
         $calculator = new IrdCalculator();
         $result = $calculator->calculate($this->tmpDir);
 
-        self::assertSame(1, $result->ifCount, 'Only one real if should be counted');
+        self::assertSame(1, $result->ifWeight, 'Only one real if should be counted');
     }
 
     public function testIgnoreCommentsReducesTotalLines(): void
@@ -90,7 +90,7 @@ PHP);
             $withComments->totalLines,
             'With comments should have more lines',
         );
-        self::assertSame(1, $withoutComments->ifCount);
+        self::assertSame(1, $withoutComments->ifWeight);
     }
 
     public function testExcludeDirectories(): void
@@ -109,7 +109,7 @@ PHP);
         $calculator = new IrdCalculator(exclude: ['vendor']);
         $result = $calculator->calculate($this->tmpDir);
 
-        self::assertSame(1, $result->ifCount, 'Vendor should be excluded');
+        self::assertSame(1, $result->ifWeight, 'Vendor should be excluded');
     }
 
     public function testIncludeElseif(): void
@@ -126,8 +126,8 @@ PHP);
         $withoutElseif = (new IrdCalculator())->calculate($this->tmpDir);
         $withElseif = (new IrdCalculator(includeElseif: true))->calculate($this->tmpDir);
 
-        self::assertSame(1, $withoutElseif->ifCount);
-        self::assertSame(2, $withElseif->ifCount);
+        self::assertSame(1, $withoutElseif->ifWeight);
+        self::assertSame(2, $withElseif->ifWeight);
     }
 
     public function testIncludeTernary(): void
@@ -143,8 +143,8 @@ PHP);
         $without = (new IrdCalculator())->calculate($this->tmpDir);
         $with = (new IrdCalculator(includeTernary: true))->calculate($this->tmpDir);
 
-        self::assertSame(1, $without->ifCount);
-        self::assertSame(2, $with->ifCount);
+        self::assertSame(1, $without->ifWeight);
+        self::assertSame(2, $with->ifWeight);
     }
 
     public function testIncludeMatch(): void
@@ -162,8 +162,8 @@ PHP);
         $without = (new IrdCalculator())->calculate($this->tmpDir);
         $with = (new IrdCalculator(includeMatch: true))->calculate($this->tmpDir);
 
-        self::assertSame(1, $without->ifCount);
-        self::assertSame(2, $with->ifCount);
+        self::assertSame(1, $without->ifWeight);
+        self::assertSame(2, $with->ifWeight);
     }
 
     public function testDirectoryNotFound(): void
@@ -183,7 +183,7 @@ PHP);
         $calculator = new IrdCalculator();
         $result = $calculator->calculate($this->tmpDir);
 
-        self::assertSame(1, $result->ifCount);
+        self::assertSame(1, $result->ifWeight);
         self::assertSame(1, $result->files);
     }
 
