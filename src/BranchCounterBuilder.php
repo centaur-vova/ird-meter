@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace CentaurVova\IrdMeter;
 
+use Override;
 use PhpParser\Node;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor;
@@ -46,13 +47,16 @@ final class BranchCounterBuilder
         $traverser->addVisitor($visitor);
         $traverser->traverse($ast);
 
-        return $visitor->weight;
+        return $visitor->getWeight();
     }
 
+    /**
+     * @return BranchCounter&NodeVisitor
+     */
     private function build(): NodeVisitor
     {
-        return new class ($this->weights) extends NodeVisitorAbstract {
-            public int $weight = 0;
+        return new class ($this->weights) extends NodeVisitorAbstract implements BranchCounter {
+            private int $weight = 0;
 
             /**
              * @param array<class-string<Node>, int> $weights
@@ -65,6 +69,12 @@ final class BranchCounterBuilder
             {
                 $this->weight += $this->weights[$node::class] ?? 0;
                 return null;
+            }
+
+            #[Override]
+            public function getWeight(): int
+            {
+                return $this->weight;
             }
         };
     }

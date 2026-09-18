@@ -10,6 +10,9 @@ use PhpParser\ParserFactory;
 
 final class IrdCalculator
 {
+    /**
+     * @param list<string> $exclude
+     */
     public function __construct(
         private readonly bool $includeElseif = false,
         private readonly bool $includeTernary = false,
@@ -27,7 +30,6 @@ final class IrdCalculator
         }
 
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
-        $traverser = new NodeTraverser();
 
         $filter = new \RecursiveCallbackFilterIterator(
             new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS),
@@ -43,6 +45,7 @@ final class IrdCalculator
         $files = 0;
 
         foreach ($iterator as $file) {
+            /** @var \SplFileInfo $file */
             if (!$file->isFile() || $file->getExtension() !== 'php') {
                 continue;
             }

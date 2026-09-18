@@ -7,6 +7,7 @@
 [![Downloads](https://img.shields.io/packagist/dt/centaur-vova/ird-meter)](https://packagist.org/packages/centaur-vova/ird-meter)
 [![PHP](https://img.shields.io/badge/php-8.1%2B-blue)](https://www.php.net/)
 [![IRD](https://img.shields.io/badge/IRD-3.50%25-yellow?style=flat)](#what-is-ird)
+[![PHPStan](https://img.shields.io/badge/PHPStan-level%2010-brightgreen)](https://github.com/centaur-vova/ird-meter)
 
 ## What is IRD?
 

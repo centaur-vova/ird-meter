@@ -1,0 +1,7 @@
+parameters:
+    level: 10
+    paths:
+        - src
+    ignoreErrors:
+        # Example: - '#Property .* has no typehint specified.#'
+        # Ignoring is for ponies
